@@ -1,0 +1,75 @@
+# 编译和构建产物
+/backend/bin/
+/backend/main
+/backend/main-*
+/frontend/dist/
+/frontend/dist-ssr/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+test_*.json
+test_*.go
+test_*.html
+test_*.sh
+*_test.go
+*_demo.go
+
+# 日志文件
+*.log
+logs/
+/backend/logs/
+/frontend/logs/
+app.log
+server.log
+
+# 临时文件
+*.tmp
+*.temp
+pids.txt
+*.pid
+.DS_Store
+Thumbs.db
+
+# 依赖
+node_modules/
+/backend/vendor/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Go相关
+*.test
+*.prof
+*.out
+coverage.txt
+
+# 前端相关
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 文档和演示文件
+*_demo.md
+*测试指南.md
+*完成报告.md
+demo_* 

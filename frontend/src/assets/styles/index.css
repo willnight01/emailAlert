@@ -1,0 +1,178 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--el-border-color-dark);
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mt-15 {
+  margin-top: 15px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+.mb-15 {
+  margin-bottom: 15px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.ml-10 {
+  margin-left: 10px;
+}
+
+.mr-10 {
+  margin-right: 10px;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Element Plus 组件样式覆盖 */
+.el-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--el-border-color-light);
+}
+
+.el-table {
+  border-radius: 8px;
+}
+
+.el-button {
+  border-radius: 6px;
+}
+
+.el-input__wrapper {
+  border-radius: 6px;
+}
+
+/* 统一按钮样式 */
+.el-button-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.el-button-group .el-button {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.el-button-group .el-button:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.el-button-group .el-button:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.el-button-group .el-button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+/* 下拉菜单危险项样式 */
+.text-danger {
+  color: #f56c6c !important;
+}
+
+.el-dropdown-menu__item.text-danger:hover {
+  background-color: #fef0f0 !important;
+  color: #f56c6c !important;
+}
+
+.text-success {
+  color: #67c23a !important;
+}
+
+.text-warning {
+  color: #e6a23c !important;
+}
+
+.el-dropdown-menu__item.text-success:hover {
+  background-color: #f0f9ff !important;
+  color: #67c23a !important;
+}
+
+.el-dropdown-menu__item.text-warning:hover {
+  background-color: #fdf6ec !important;
+  color: #e6a23c !important;
+}
+
+/* 样式文件结尾 */ 
