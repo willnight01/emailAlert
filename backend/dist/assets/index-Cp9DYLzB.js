@@ -1,0 +1,2 @@
+function i(e,r="YYYY-MM-DD HH:mm:ss"){if(!e)return"";const t=new Date(e);if(isNaN(t.getTime()))return"";const a=t.getFullYear(),n=String(t.getMonth()+1).padStart(2,"0"),s=String(t.getDate()).padStart(2,"0"),c=String(t.getHours()).padStart(2,"0"),o=String(t.getMinutes()).padStart(2,"0"),g=String(t.getSeconds()).padStart(2,"0");return r.replace("YYYY",a).replace("MM",n).replace("DD",s).replace("HH",c).replace("mm",o).replace("ss",g)}export{i as f};
+//# sourceMappingURL=index-Cp9DYLzB.js.map

@@ -1,0 +1,65 @@
+services:
+  # 后端服务
+  backend:
+    image: willnight1989/emailalert-backend:arm-latest
+    container_name: emailalert-backend
+    restart: unless-stopped
+    environment:
+      - GIN_MODE=release
+      - PORT=8080
+      - DB_PATH=/app/data/emailalert.db
+    volumes:
+      - backend-data:/app/data
+      - backend-logs:/app/logs
+    ports:
+      - "8080:8080"  # 可选：如果需要直接访问后端API
+    networks:
+      - emailalert-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # 前端服务 (nginx)
+  frontend:
+    image: willnight1989/emailalert-frontend:arm-latest
+    container_name: emailalert-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"  # 映射到宿主机的3000端口
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - emailalert-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# 数据卷
+volumes:
+  backend-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backend/data
+  backend-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backend/logs
+
+# 网络
+networks:
+  emailalert-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

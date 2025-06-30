@@ -1,0 +1,39 @@
+# 构建产物
+emailAlert
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+*_test.go
+test/
+coverage.out
+
+# 数据文件
+data/
+logs/
+*.db
+*.log
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 版本控制
+.git/
+.gitignore
+
+# 文档
+*.md
+docs/
+
+# 临时文件
+tmp/
+temp/
+.DS_Store
+Thumbs.db 

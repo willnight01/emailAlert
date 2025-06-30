@@ -78,16 +78,17 @@ type EmailHandler interface {
 
 // Monitor 邮件监控器
 type Monitor struct {
-	mailboxes    []MailboxConfig
-	config       *MonitorConfig
-	handler      EmailHandler
-	stopChan     chan struct{}
-	wg           sync.WaitGroup
-	isRunning    bool
-	mutex        sync.RWMutex
-	lastCheckUID map[uint]int // 记录每个邮箱的最后检查UID
-	startTime    time.Time    // 监控启动时间，只处理此时间之后的邮件
-	parser       *EmailParser // 邮件解析器
+	mailboxes      []MailboxConfig
+	config         *MonitorConfig
+	handler        EmailHandler
+	stopChan       chan struct{}
+	wg             sync.WaitGroup
+	isRunning      bool
+	mutex          sync.RWMutex
+	lastCheckUID   map[uint]int         // 记录每个邮箱的最后检查UID
+	mailboxMutexes map[uint]*sync.Mutex // 每个邮箱的专用互斥锁，防止同一邮箱并发处理
+	startTime      time.Time            // 监控启动时间，只处理此时间之后的邮件
+	parser         *EmailParser         // 邮件解析器
 }
 
 // NewMonitor 创建新的邮件监控器
@@ -97,11 +98,12 @@ func NewMonitor(config *MonitorConfig, handler EmailHandler) *Monitor {
 	}
 
 	return &Monitor{
-		config:       config,
-		handler:      handler,
-		stopChan:     make(chan struct{}),
-		lastCheckUID: make(map[uint]int),
-		parser:       NewEmailParser(), // 初始化邮件解析器
+		config:         config,
+		handler:        handler,
+		stopChan:       make(chan struct{}),
+		lastCheckUID:   make(map[uint]int),
+		mailboxMutexes: make(map[uint]*sync.Mutex), // 初始化邮箱互斥锁映射
+		parser:         NewEmailParser(),           // 初始化邮件解析器
 	}
 }
 
@@ -131,6 +133,7 @@ func (m *Monitor) RemoveMailbox(mailboxID uint) {
 		if mb.ID == mailboxID {
 			m.mailboxes = append(m.mailboxes[:i], m.mailboxes[i+1:]...)
 			delete(m.lastCheckUID, mailboxID)
+			delete(m.mailboxMutexes, mailboxID) // 清理邮箱专用互斥锁
 			log.Printf("邮箱监控: 从监控列表移除邮箱 ID %d", mailboxID)
 			return
 		}
@@ -152,6 +155,7 @@ func (m *Monitor) UpdateMailboxes(mailboxes []MailboxConfig) {
 	for id := range m.lastCheckUID {
 		if !existingIDs[id] {
 			delete(m.lastCheckUID, id)
+			delete(m.mailboxMutexes, id) // 清理不存在邮箱的互斥锁
 		}
 	}
 
@@ -405,8 +409,8 @@ func (m *Monitor) fetchNewEmails(mailboxConfig MailboxConfig) error {
 		return nil
 	}
 
-	// 获取上次检查的UID
-	lastUID := m.getLastCheckUID(mailboxConfig.ID)
+	// 获取上次检查的UID（原子操作）
+	lastUID := m.getAndPrepareLastCheckUID(mailboxConfig.ID)
 
 	// 修复阿里云企业邮箱兼容性问题 - 完全避免使用搜索
 	var uids []uint32
@@ -538,9 +542,9 @@ func (m *Monitor) fetchNewEmails(mailboxConfig MailboxConfig) error {
 		return fmt.Errorf("获取邮件失败: %v", err)
 	}
 
-	// 更新最后检查的UID
+	// 更新最后检查的UID（原子操作，确保单调递增）
 	if maxUID > 0 {
-		m.setLastCheckUID(mailboxConfig.ID, int(maxUID))
+		m.updateLastCheckUID(mailboxConfig.ID, int(maxUID))
 	}
 
 	return nil
@@ -703,7 +707,64 @@ func (m *Monitor) convertToEmailData(msg *imap.Message) *EmailData {
 	return emailData
 }
 
-// getLastCheckUID 获取最后检查的UID
+// getMailboxMutex 获取或创建邮箱专用的互斥锁
+func (m *Monitor) getMailboxMutex(mailboxID uint) *sync.Mutex {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if mutex, exists := m.mailboxMutexes[mailboxID]; exists {
+		return mutex
+	}
+
+	// 创建新的互斥锁
+	mutex := &sync.Mutex{}
+	m.mailboxMutexes[mailboxID] = mutex
+	return mutex
+}
+
+// getAndPrepareLastCheckUID 原子化获取最后检查的UID，并为当前检查做准备
+// 返回上次检查的UID，同时确保同一时间只能有一个goroutine处理同一个邮箱
+func (m *Monitor) getAndPrepareLastCheckUID(mailboxID uint) int {
+	// 使用邮箱专用锁，确保同一时间只有一个goroutine处理同一个邮箱
+	mailboxMutex := m.getMailboxMutex(mailboxID)
+	mailboxMutex.Lock()
+	defer mailboxMutex.Unlock()
+
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	if uid, exists := m.lastCheckUID[mailboxID]; exists {
+		return uid
+	}
+	return 0
+}
+
+// updateLastCheckUID 原子化更新最后检查的UID，确保单调递增
+func (m *Monitor) updateLastCheckUID(mailboxID uint, newUID int) {
+	// 使用邮箱专用锁，确保同一时间只有一个goroutine处理同一个邮箱
+	mailboxMutex := m.getMailboxMutex(mailboxID)
+	mailboxMutex.Lock()
+	defer mailboxMutex.Unlock()
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	// 确保UID是单调递增的，防止并发导致的UID回退
+	if currentUID, exists := m.lastCheckUID[mailboxID]; exists {
+		if newUID > currentUID {
+			m.lastCheckUID[mailboxID] = newUID
+			log.Printf("邮箱 %d: UID更新从 %d 到 %d", mailboxID, currentUID, newUID)
+		} else {
+			log.Printf("邮箱 %d: UID未更新，新UID(%d) <= 当前UID(%d)", mailboxID, newUID, currentUID)
+		}
+	} else {
+		m.lastCheckUID[mailboxID] = newUID
+		log.Printf("邮箱 %d: 初始UID设置为 %d", mailboxID, newUID)
+	}
+}
+
+// getLastCheckUID 兼容性方法 - 已废弃，仅用于向后兼容
+// 建议使用getAndPrepareLastCheckUID替代
 func (m *Monitor) getLastCheckUID(mailboxID uint) int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -714,7 +775,8 @@ func (m *Monitor) getLastCheckUID(mailboxID uint) int {
 	return 0
 }
 
-// setLastCheckUID 设置最后检查的UID
+// setLastCheckUID 兼容性方法 - 已废弃，仅用于向后兼容
+// 建议使用updateLastCheckUID替代
 func (m *Monitor) setLastCheckUID(mailboxID uint, uid int) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
