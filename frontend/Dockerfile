@@ -28,19 +28,23 @@ RUN npm config set registry https://registry.npmmirror.com && \
     npm config set profiler_binary_host_mirror https://npmmirror.com/mirrors/node-inspector/ && \
     npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver/
 
-# 复制package文件（利用Docker缓存层）
+# 复制package文件（先复制依赖文件，最大化缓存重用）
 COPY package*.json ./
 
-# 安装依赖（优化安装过程）
-RUN echo "Installing dependencies for platform: ${TARGETPLATFORM}, Arch: ${TARGETARCH}" && \
-    npm ci --no-audit --no-fund --prefer-offline && \
+# 安装依赖（使用缓存挂载提高速度）
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/app/.npm \
+    --mount=type=cache,target=/usr/local/share/.cache/yarn \
+    echo "Installing dependencies for platform: ${TARGETPLATFORM}, Arch: ${TARGETARCH}" && \
+    npm ci --no-audit --no-fund --prefer-offline --cache /app/.npm && \
     npm cache clean --force
 
-# 复制源代码
+# 复制源代码（放在依赖安装之后，避免代码变更导致依赖重新安装）
 COPY . .
 
-# 构建应用（添加构建信息）
-RUN echo "Building frontend for ${TARGETPLATFORM}" && \
+# 构建应用（添加构建信息，使用缓存）
+RUN --mount=type=cache,target=/app/node_modules/.cache \
+    echo "Building frontend for ${TARGETPLATFORM}" && \
     npm run build && \
     echo "Build completed successfully"
 

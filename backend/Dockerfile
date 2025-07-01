@@ -26,19 +26,24 @@ ENV CGO_ENABLED=1 \
     GOOS=${TARGETOS} \
     GOARCH=${TARGETARCH} \
     GO111MODULE=on \
-    GOPROXY=https://goproxy.cn,direct
+    GOPROXY=https://goproxy.cn,direct \
+    GOSUMDB=sum.golang.google.cn
 
-# 复制依赖文件
+# 复制依赖文件（先复制依赖文件，最大化缓存重用）
 COPY go.mod go.sum ./
 
-# 下载依赖（利用Docker缓存层）
-RUN go mod download && go mod verify
+# 下载依赖（使用缓存挂载提高速度）
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download && go mod verify
 
-# 复制源代码
+# 复制源代码（放在依赖下载之后，避免代码变更导致依赖重新下载）
 COPY . .
 
-# 构建应用（自动适应目标架构）
-RUN echo "Building for platform: ${TARGETPLATFORM}, OS: ${TARGETOS}, Arch: ${TARGETARCH}" && \
+# 构建应用（自动适应目标架构，使用构建缓存）
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    echo "Building for platform: ${TARGETPLATFORM}, OS: ${TARGETOS}, Arch: ${TARGETARCH}" && \
     go build \
     -ldflags="-w -s -extldflags '-static'" \
     -a -installsuffix cgo \

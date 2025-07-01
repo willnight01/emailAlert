@@ -5,6 +5,10 @@
 
 set -e
 
+# 启用Docker BuildKit以支持缓存挂载
+export DOCKER_BUILDKIT=1
+export BUILDKIT_PROGRESS=auto
+
 # 颜色定义
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -71,10 +75,12 @@ check_docker() {
     DOCKER_VERSION=$(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
     print_info "   Docker版本: $DOCKER_VERSION"
     
-    # 检查Docker服务状态
-    if ! systemctl is-active --quiet docker; then
-        print_error "❌ Docker服务未运行"
-        print_info "💡 启动命令: sudo systemctl start docker"
+    # 检查Docker服务状态（兼容不同操作系统）
+    if ! docker info >/dev/null 2>&1; then
+        print_error "❌ Docker服务未运行或无法连接"
+        print_info "💡 Linux启动命令: sudo systemctl start docker"
+        print_info "💡 Mac启动命令: 启动Docker Desktop应用"
+        print_info "💡 Windows启动命令: 启动Docker Desktop应用"
         exit 1
     fi
     
@@ -136,6 +142,7 @@ build_image() {
     print_info "   镜像: $image_name"
     print_info "   平台: $PLATFORM"
     print_info "   系统: CentOS7 x86_64"
+    print_info "   缓存: 启用 (BuildKit)"
     
     # 检查Dockerfile是否存在
     if [[ ! -f "$service/Dockerfile" ]]; then

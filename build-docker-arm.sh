@@ -5,6 +5,10 @@
 
 set -e
 
+# 启用Docker BuildKit以支持缓存挂载
+export DOCKER_BUILDKIT=1
+export BUILDKIT_PROGRESS=auto
+
 # 颜色定义
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -90,6 +94,7 @@ build_image() {
     print_info "🔨 构建 $service 镜像..."
     print_info "   镜像: $image_name"
     print_info "   平台: $PLATFORM"
+    print_info "   缓存: 启用 (BuildKit)"
     
     # 构建命令
     if docker build \
