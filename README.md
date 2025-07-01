@@ -1,8 +1,13 @@
 # 📧 统一邮件告警平台
+![image](https://github.com/user-attachments/assets/629dface-65f4-46d1-9227-7123849c7f2d)
+![image](https://github.com/user-attachments/assets/2997e650-7d9d-4654-b610-d017f6c78e1e)
+![image](https://github.com/user-attachments/assets/9c38cd6e-d4cd-4338-b973-d019fd3e0880)
+![image](https://github.com/user-attachments/assets/c64f2f19-30b8-4303-be3f-118f295439b4)
+
 
 <div align="center">
 
-> 🚀 基于 Go + Vue3 的企业级邮件告警管理系统  
+>  基于 Go + Vue3 的企业级邮件告警管理系统  
 > 支持多邮箱监控、智能规则匹配、多渠道通知的统一告警平台
 
 [![项目状态](https://img.shields.io/badge/状态-已完成-brightgreen.svg)](https://github.com/wilnight01/emailAlert)

@@ -12,7 +12,8 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # 配置变量
-DOCKER_REGISTRY="willnight1989"
+DOCKER_REGISTRY="crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com"
+PROJECT_NAMESPACE="willnight"
 PROJECT_NAME="emailalert"
 PLATFORM="linux/arm64"  # 固定为ARM64平台
 
@@ -59,10 +60,32 @@ check_docker() {
     print_success "✅ Docker环境正常"
 }
 
+# 检查Docker登录状态
+check_docker_login() {
+    if [[ "$PUSH_IMAGE" == "true" ]]; then
+        print_info "🔐 检查阿里云仓库登录状态..."
+        
+        # 检查是否已登录阿里云仓库
+        if ! docker info | grep -q "$DOCKER_REGISTRY"; then
+            print_info "📝 登录阿里云容器镜像服务..."
+            echo "Aa56764009" | docker login --username=willnightzhanglixia@126.com --password-stdin $DOCKER_REGISTRY
+            
+            if [[ $? -eq 0 ]]; then
+                print_success "✅ 阿里云仓库登录成功"
+            else
+                print_error "❌ 阿里云仓库登录失败"
+                exit 1
+            fi
+        else
+            print_success "✅ 已登录阿里云仓库"
+        fi
+    fi
+}
+
 # 构建镜像
 build_image() {
     local service=$1
-    local image_name="$DOCKER_REGISTRY/$PROJECT_NAME-$service:$VERSION"
+    local image_name="$DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$service-$VERSION"
     
     print_info "🔨 构建 $service 镜像..."
     print_info "   镜像: $image_name"
@@ -100,11 +123,11 @@ show_results() {
     print_info "📋 构建结果："
     
     if [[ "$BUILD_BACKEND" == "true" ]]; then
-        echo "  🔧 后端: $DOCKER_REGISTRY/$PROJECT_NAME-backend:$VERSION"
+        echo "  🔧 后端: $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:backend-$VERSION"
     fi
     
     if [[ "$BUILD_FRONTEND" == "true" ]]; then
-        echo "  🌐 前端: $DOCKER_REGISTRY/$PROJECT_NAME-frontend:$VERSION"
+        echo "  🌐 前端: $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:frontend-$VERSION"
     fi
     
     echo "  🏗️ 平台: $PLATFORM"
@@ -117,6 +140,7 @@ main() {
     
     # 检查环境
     check_docker
+    check_docker_login
     
     # 构建镜像
     if [[ "$BUILD_BACKEND" == "true" ]]; then

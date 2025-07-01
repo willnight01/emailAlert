@@ -7,6 +7,7 @@
 | 构建脚本 | `build-docker-arm.sh` | `build-docker-x86.sh` |
 | 容器编排 | `docker-compose.yml` | `docker-compose-x86.yml` |
 | 部署指南 | `DOCKER-BUILD-README.md` | `CENTOS7-DEPLOY-README.md` |
+| **镜像仓库** | **阿里云容器镜像服务** | **阿里云容器镜像服务** |
 
 ## 主要差异
 
@@ -47,7 +48,7 @@ VERSION="x86-latest"
 ```yaml
 services:
   backend:
-    image: willnight1989/emailalert-backend:arm-latest
+    image: crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:backend-arm-latest
     # 基础配置
 ```
 
@@ -55,7 +56,7 @@ services:
 ```yaml
 services:
   backend:
-    image: willnight1989/emailalert-backend:x86-latest
+    image: crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:backend-x86-latest
     # CentOS7优化配置
     security_opt:
       - no-new-privileges:true

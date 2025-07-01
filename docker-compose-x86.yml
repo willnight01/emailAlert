@@ -22,7 +22,7 @@ x-healthcheck-defaults: &healthcheck-defaults
 services:
   # 后端服务
   backend:
-    image: willnight1989/emailalert-backend:x86-latest
+    image: crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:backend-x86-latest
     container_name: emailalert-backend
     restart: unless-stopped
     environment:
@@ -60,7 +60,7 @@ services:
 
   # 前端服务 (nginx)
   frontend:
-    image: willnight1989/emailalert-frontend:x86-latest
+    image: crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:frontend-x86-latest
     container_name: emailalert-frontend
     restart: unless-stopped
     environment:

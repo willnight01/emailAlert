@@ -122,11 +122,11 @@ chmod +x build-docker-x86.sh
 ```bash
 # 构建后端镜像
 cd backend
-docker build --platform linux/amd64 -t willnight1989/emailalert-backend:x86-latest .
+docker build --platform linux/amd64 -t crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:backend-x86-latest .
 
 # 构建前端镜像
 cd ../frontend
-docker build --platform linux/amd64 -t willnight1989/emailalert-frontend:x86-latest .
+docker build --platform linux/amd64 -t crpi-0vtsukduyebtna5k.cn-hangzhou.personal.cr.aliyuncs.com/willnight/emailalert:frontend-x86-latest .
 
 # 返回项目根目录
 cd ..
