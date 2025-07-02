@@ -270,13 +270,41 @@ GET    /api/v1/system/stats           # 系统统计信息
 
 ## 🐳 部署指南
 
-### Docker 部署 (推荐)
+### 📦 Docker 部署 (推荐)
+
+#### 快速开始
 ```bash
-cd backend
-docker-compose up -d
+# 1. 克隆项目
+git clone https://github.com/wilnight01/emailAlert.git
+cd emailElert
+
+# 2. 一键Docker部署
+docker compose up -d
+
+# 3. 访问服务
+# 前端: http://localhost:3000
+# 后端: http://localhost:8080
 ```
 
-### 手动部署
+#### 自定义镜像构建
+```bash
+# ARM架构 (Mac M1/M2)
+./build-docker-arm.sh
+
+# X86架构 (Linux服务器)
+./build-docker-x86.sh
+
+# 构建并推送到镜像仓库
+./build-docker-arm.sh -p -v latest
+```
+
+#### Docker Compose配置
+- **ARM版本**: `docker-compose.yml`
+- **X86版本**: `docker-compose-x86.yml`
+
+更多Docker部署详情请参考：[📖 Docker部署指南](DOCKER_README.md)
+
+### 🛠️ 手动部署
 
 #### 后端部署
 ```bash
@@ -487,6 +515,24 @@ Vue3+Element Plus<br/>
 - **智能通知分发** - 多渠道并发推送和失败重试机制
 - **实时系统监控** - 完整的健康状态和性能监控
 - **企业级管理界面** - 现代化的可视化管理系统
+
+---
+
+## 📚 文档指南
+
+### 核心文档
+- 📖 **[README.md](README.md)** - 项目总览、功能介绍、快速开始
+- 🐳 **[DOCKER_README.md](DOCKER_README.md)** - 详细的Docker部署指南
+
+### 构建脚本
+- 🔧 **[build-docker-arm.sh](build-docker-arm.sh)** - ARM架构Docker镜像构建（Mac M1/M2）
+- 🔧 **[build-docker-x86.sh](build-docker-x86.sh)** - X86架构Docker镜像构建（Linux服务器）
+
+### 部署配置
+- ⚙️ **[docker-compose.yml](docker-compose.yml)** - ARM版本容器编排
+- ⚙️ **[docker-compose-x86.yml](docker-compose-x86.yml)** - X86版本容器编排
+
+**💡 提示**：已清理重复和专门化文档，保留核心必要文档，降低维护成本。
 
 ---
 

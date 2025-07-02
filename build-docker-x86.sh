@@ -45,15 +45,21 @@ show_help() {
     echo "  -p           构建完成后推送到镜像仓库"
     echo "  -b           仅构建后端镜像"
     echo "  -f           仅构建前端镜像"
+    echo "  -c           清理Docker缓存（强制重新构建）"
     echo "  -h           显示帮助信息"
     echo ""
     echo "示例:"
     echo "  $0 -v 1.0.0 -p    # 构建并推送 v1.0.0 版本"
     echo "  $0 -b             # 仅构建后端镜像"
+    echo "  $0 -c -f          # 清理缓存并重新构建前端"
+    echo "  $0 -v latest -p -c # 清理缓存，构建并推送latest版本"
     echo ""
     echo "注意："
     echo "  - 适用于 CentOS7 x86_64 服务器"
     echo "  - 需要 Docker 版本 >= 18.09"
+    echo "  - 已修复npm配置废弃选项问题"
+    echo "  - 默认启用Docker缓存以加速构建"
+    echo "  - 使用-c参数可强制清理缓存重建"
 }
 
 # 检查Docker环境
@@ -92,16 +98,23 @@ check_disk_space() {
     print_info "💾 检查磁盘空间..."
     
     # 检查当前目录可用空间 (需要至少2GB)
-    AVAILABLE_SPACE=$(df . | tail -1 | awk '{print $4}')
+    AVAILABLE_SPACE=$(df . | tail -1 | awk '{print $4}' 2>/dev/null || echo "0")
     REQUIRED_SPACE=$((2 * 1024 * 1024))  # 2GB in KB
+    
+    # 兼容性检查：如果无法获取磁盘空间，给出警告但继续
+    if [[ -z "$AVAILABLE_SPACE" || "$AVAILABLE_SPACE" == "0" ]]; then
+        print_info "⚠️  无法检测磁盘空间，跳过检查"
+        return 0
+    fi
     
     if [[ $AVAILABLE_SPACE -lt $REQUIRED_SPACE ]]; then
         print_error "❌ 磁盘空间不足 (需要至少2GB)"
         print_info "💡 当前可用: $(($AVAILABLE_SPACE / 1024 / 1024))GB"
+        print_info "💡 建议清理磁盘空间或使用 -c 参数清理Docker缓存"
         exit 1
     fi
     
-    print_success "✅ 磁盘空间充足"
+    print_success "✅ 磁盘空间充足 ($(($AVAILABLE_SPACE / 1024 / 1024))GB)"
 }
 
 # 清理Docker缓存
@@ -137,12 +150,13 @@ check_docker_login() {
 build_image() {
     local service=$1
     local image_name="$DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$service-$VERSION"
+    local start_time=$(date +%s)
     
     print_info "🔨 构建 $service 镜像..."
     print_info "   镜像: $image_name"
     print_info "   平台: $PLATFORM"
     print_info "   系统: CentOS7 x86_64"
-    print_info "   缓存: 启用 (BuildKit)"
+    print_info "   缓存: $([ "$CLEANUP" == "true" ] && echo "已清理，强制重建" || echo "启用 (BuildKit + Docker缓存)")"
     
     # 检查Dockerfile是否存在
     if [[ ! -f "$service/Dockerfile" ]]; then
@@ -150,19 +164,26 @@ build_image() {
         exit 1
     fi
     
-    # 构建命令
+    # 构建命令（根据CLEANUP参数决定是否使用缓存）
+    local build_args="--platform $PLATFORM"
+    if [[ "$CLEANUP" == "true" ]]; then
+        build_args="$build_args --no-cache"
+    fi
+    
     if docker build \
-        --platform "$PLATFORM" \
-        --no-cache \
+        $build_args \
         -t "$image_name" \
         -f "$service/Dockerfile" \
         "$service/"; then
         
+        local end_time=$(date +%s)
+        local build_time=$((end_time - start_time))
         print_success "✅ $service 镜像构建成功"
         
         # 显示镜像信息
         IMAGE_SIZE=$(docker images "$image_name" --format "table {{.Size}}" | tail -1)
         print_info "   镜像大小: $IMAGE_SIZE"
+        print_info "   构建耗时: ${build_time}秒"
         
         # 如果需要推送
         if [[ "$PUSH_IMAGE" == "true" ]]; then

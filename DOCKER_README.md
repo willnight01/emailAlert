@@ -1,6 +1,9 @@
 # 🐳 EmailAlert Docker 部署指南
 
-本文档详细介绍如何使用 Docker 部署 EmailAlert 统一邮件告警平台。
+> **📖 本文档提供详细的Docker部署说明和故障排除指南**  
+> 如需快速开始，请参考：[README.md - 快速开始](README.md#-快速开始)
+
+本文档详细介绍如何使用 Docker 部署 EmailAlert 统一邮件告警平台，包含完整的配置说明、故障排除和最佳实践。
 
 ## 📋 目录
 
