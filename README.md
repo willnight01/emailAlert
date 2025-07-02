@@ -1,4 +1,8 @@
 # 📧 统一邮件告警平台
+测试地址：http://106.14.79.204:3000/dashboard
+默认账号密码 admin/admin
+
+
 ![image](https://github.com/user-attachments/assets/629dface-65f4-46d1-9227-7123849c7f2d)
 ![image](https://github.com/user-attachments/assets/2997e650-7d9d-4654-b610-d017f6c78e1e)
 ![image](https://github.com/user-attachments/assets/9c38cd6e-d4cd-4338-b973-d019fd3e0880)
